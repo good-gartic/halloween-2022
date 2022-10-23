@@ -1,0 +1,11 @@
+spring:
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/halloween}
+    username: ${DATABASE_USERNAME:halloween}
+    password: ${DATABASE_PASSWORD:halloween}
+
+  liquibase:
+    enabled: true
+    change-log: classpath*:/changelog.sql
+    database-change-log-table: liquibase_change_log
+    database-change-log-lock-table: liquibase_change_log_lock
