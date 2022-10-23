@@ -9,3 +9,6 @@ spring:
     change-log: classpath*:/changelog.sql
     database-change-log-table: liquibase_change_log
     database-change-log-lock-table: liquibase_change_log_lock
+
+  discord:
+    token: ${DISCORD_TOKEN}
