@@ -49,5 +49,5 @@ tasks.withType<Test> {
 tasks.withType<BootBuildImage> {
     builder = "paketobuildpacks/builder:tiny"
     imageName = "jirkavrba/good-gartic-halloween-bot:$version"
-    environment = mapOf("BP_NATIVE_IMAGE" to "true")
+    environment = mapOf("BP_NATIVE_IMAGE" to "false")
 }
