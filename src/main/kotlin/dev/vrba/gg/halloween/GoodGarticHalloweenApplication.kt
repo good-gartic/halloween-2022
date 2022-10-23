@@ -4,9 +4,11 @@ import dev.vrba.gg.halloween.configuration.DiscordConfiguration
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.runApplication
+import org.springframework.scheduling.annotation.EnableScheduling
 
-@SpringBootApplication
+@EnableScheduling
 @EnableConfigurationProperties(DiscordConfiguration::class)
+@SpringBootApplication
 class GoodGarticHalloweenApplication
 
 fun main(args: Array<String>) {
