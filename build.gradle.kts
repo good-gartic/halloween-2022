@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "dev.vrba"
-version = "0.0.1-SNAPSHOT"
+version = "0.0.1"
 java.sourceCompatibility = JavaVersion.VERSION_17
 
 configurations {
@@ -29,6 +29,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("org.liquibase:liquibase-core")
+    implementation("net.dv8tion:JDA:5.0.0-alpha.21")
     runtimeOnly("org.postgresql:postgresql")
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
@@ -47,5 +48,6 @@ tasks.withType<Test> {
 
 tasks.withType<BootBuildImage> {
     builder = "paketobuildpacks/builder:tiny"
+    imageName = "jirkavrba/good-gartic-halloween-bot:$version"
     environment = mapOf("BP_NATIVE_IMAGE" to "true")
 }
