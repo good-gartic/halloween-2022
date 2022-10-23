@@ -3,6 +3,10 @@
     {
       "name": "spring.discord.token",
       "type": "java.lang.String"
+    },
+    {
+      "name": "spring.discord.channel",
+      "type": "java.lang.Long"
     }
   ]
 }

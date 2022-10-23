@@ -5,4 +5,7 @@ import org.springframework.boot.context.properties.ConstructorBinding
 
 @ConstructorBinding
 @ConfigurationProperties(prefix = "spring.discord")
-class DiscordConfiguration(val token: String)
+class DiscordConfiguration(
+    val token: String,
+    val channel: Long
+)
