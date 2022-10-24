@@ -26,10 +26,15 @@ class CollectiblesService(
 
     fun collectItem(id: Int, user: Long): Collectible {
         val collectible = collectibleRepository.findByIdOrNull(id) ?: throw IllegalArgumentException("Cannot find the collectible")
-        val score = scoreRepository.findByUser(user) ?: scoreRepository.save(Score(user = user))
+        val score = scoreRepository.findByUser(user) ?: scoreRepository.save(Score(user = user, collection = ""))
+        val updated = score.copy(
+            points = score.points + collectible.value,
+            collection = score.collection + " " + collectible.emoji
+        )
 
-        scoreRepository.save(score.copy(points =  score.points + collectible.value))
+        scoreRepository.save(updated)
 
         return collectible
     }
+
 }

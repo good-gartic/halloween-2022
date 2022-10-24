@@ -57,3 +57,7 @@ values ('🎃', 'Jack-O-Lantern', 'Hmm looks stunning', 2, 5),
        ('💣', 'A bomb', 'The time is ticking!', 3, 5),
        ('✨', 'A sparkle', 'Nice and shiny', 1, 5),
        ('🌠', 'A falling star', 'Make a wish!', 1, 10);
+
+--changelog jirkavrba:add-collection-to-score-table
+alter table score
+    add column "collection" varchar(2048) default '';

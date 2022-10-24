@@ -14,5 +14,8 @@ data class Score(
     val user: Long,
 
     @Column("points")
-    val points: Int = 0
+    val points: Int = 0,
+
+    @Column("collection")
+    val collection: String,
 )
