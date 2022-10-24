@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import org.springframework.stereotype.Component
+import java.time.Instant
 
 @Component
 class CommandService(private val service: CollectiblesService) : ListenerAdapter() {
@@ -58,7 +59,23 @@ class CommandService(private val service: CollectiblesService) : ListenerAdapter
     }
 
     private fun displayLeaderboard(event: SlashCommandInteractionEvent) {
+        val reply = event.deferReply().complete()
+        val leaderboard = service.getLeaderboard()
 
+        val builder = EmbedBuilder()
+            .setColor(0xf49200)
+            .setTitle("Good Gartic's Halloween leaderboard")
+            .setTimestamp(Instant.now())
+
+        val embed = leaderboard.fold(builder) { embed, score ->
+            embed.addField(
+                "${score.points} point${if (score.points > 1) "s" else ""}",
+                "<@${score.user}>",
+                false
+            )
+        }.build()
+
+        reply.editOriginalEmbeds(embed).queue()
     }
 
 }

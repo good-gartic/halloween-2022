@@ -4,6 +4,8 @@ import dev.vrba.gg.halloween.domain.Collectible
 import dev.vrba.gg.halloween.domain.Score
 import dev.vrba.gg.halloween.repository.CollectibleRepository
 import dev.vrba.gg.halloween.repository.ScoreRepository
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import java.lang.IllegalArgumentException
@@ -39,6 +41,14 @@ class CollectiblesService(
 
     fun getUserScore(user: Long): Score? {
         return scoreRepository.findByUser(user)
+    }
+
+    fun getLeaderboard(): List<Score> {
+        // Select the top 10 users
+        val sort = Sort.by(Sort.Direction.DESC, "points")
+        val pagination = PageRequest.of(0, 10, sort)
+
+        return scoreRepository.findAll(pagination).toList()
     }
 
 }
