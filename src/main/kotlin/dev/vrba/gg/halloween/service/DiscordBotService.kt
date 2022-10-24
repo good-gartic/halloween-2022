@@ -79,19 +79,21 @@ final class DiscordBotService(
         val collectible = service.collectItem(id, event.user.idLong)
 
         val username = event.member?.nickname ?: event.user.name
+        val button = Button.secondary("disabled", "Collected by $username").withDisabled(true)
         val image = emojiToImageUrl(collectible.emoji, 48)
-        val embed = EmbedBuilder()
+        val base = EmbedBuilder()
             .setColor(0x202225)
             .setTitle(collectible.displayName())
             .setDescription(collectible.description)
             .setAuthor(username, null, event.user.effectiveAvatarUrl)
-            .addField("Collected in", "<#${event.channel.idLong}>", false)
             .setThumbnail(image)
-            .build()
 
-        event.message.delete().queue()
+        event.message
+            .editMessageEmbeds(base.build())
+            .setActionRow(button)
+            .queue()
 
-        log.sendMessageEmbeds(embed).queue()
+        log.sendMessageEmbeds(base.addField("Collected in", "<#${event.channel.idLong}>", false).build()).queue()
     }
 
     private fun emojiToImageUrl(emoji: String, size: Int = 256): String {
