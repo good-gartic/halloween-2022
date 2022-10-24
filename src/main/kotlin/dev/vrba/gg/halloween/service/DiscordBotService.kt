@@ -44,7 +44,7 @@ final class DiscordBotService(
         commands.register(jda)
     }
 
-    @Scheduled(initialDelay = 0, fixedRate = 10, timeUnit = TimeUnit.MINUTES)
+    @Scheduled(initialDelay = 0, fixedRate = 5, timeUnit = TimeUnit.MINUTES)
     fun scheduleRandomCollectible() {
         // Delay the post by 0-9 minutes
         val delay = Random.nextInt(0..9)
@@ -77,8 +77,6 @@ final class DiscordBotService(
     override fun onButtonInteraction(event: ButtonInteractionEvent) {
         if (!event.componentId.startsWith("collect:")) return
 
-        event.deferEdit().complete()
-
         // Another user has already collected the collectible
         if (resolvedInteractions.contains(event.message.idLong)) {
             return
@@ -86,6 +84,8 @@ final class DiscordBotService(
 
         // Lock the collectible interaction
         resolvedInteractions += event.message.idLong
+
+        event.deferEdit().complete()
 
         val id = event.componentId.removePrefix("collect:").toInt()
         val collectible = service.collectItem(id, event.user.idLong)
