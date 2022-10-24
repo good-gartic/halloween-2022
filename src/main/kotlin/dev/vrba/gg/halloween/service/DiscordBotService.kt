@@ -4,6 +4,7 @@ import dev.vrba.gg.halloween.configuration.DiscordConfiguration
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDABuilder
+import net.dv8tion.jda.api.entities.Activity
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
@@ -25,6 +26,7 @@ final class DiscordBotService(
 ) : ListenerAdapter() {
 
     private val jda: JDA = JDABuilder.createDefault(configuration.token)
+        .setActivity(Activity.playing(("the Halloween game")))
         .build()
         .awaitReady()
 
@@ -35,10 +37,10 @@ final class DiscordBotService(
         jda.addEventListener(this)
     }
 
-    @Scheduled(initialDelay = 0, fixedRate = 1, timeUnit = TimeUnit.HOURS)
+    @Scheduled(initialDelay = 0, fixedRate = 30, timeUnit = TimeUnit.MINUTES)
     fun scheduleRandomCollectible() {
-        // Delay the post by 0-59 minutes
-        val delay = Random.nextInt(0..59)
+        // Delay the post by 0-29 minutes
+        val delay = 0 // Random.nextInt(0..29)
         val start = Instant.now() + Duration.ofMinutes(delay.toLong())
 
         scheduler.schedule(this::sendCollectible, start)
@@ -46,15 +48,12 @@ final class DiscordBotService(
 
     private fun sendCollectible() {
         val collectible = service.getRandomCollectible()
-        val image = collectible.emoji.codePoints()
-            .mapToObj { "https://emojiapi.dev/api/v1/${it.toString(16)}/256.png" }
-            .toList()
-            .first()
 
         val user = jda.selfUser
+        val image = emojiToImageUrl(collectible.emoji)
         val embed = EmbedBuilder()
             .setColor(0xf49200)
-            .setTitle("${collectible.name} (${collectible.value} point${if (collectible.value == 1) "" else "s"})")
+            .setTitle(collectible.displayName())
             .setDescription(collectible.description)
             .setFooter(user.name, user.effectiveAvatarUrl)
             .setImage(image)
@@ -70,14 +69,31 @@ final class DiscordBotService(
     override fun onButtonInteraction(event: ButtonInteractionEvent) {
         if (!event.componentId.startsWith("collect:")) return
 
+        event.deferEdit().complete()
+
         val id = event.componentId.removePrefix("collect:").toInt()
         val user = event.user
+        val collectible = service.collectItem(id, user.idLong)
 
         val button = Button.secondary("collect:-", "Collected by ${user.name}").withDisabled(true)
+        val image = emojiToImageUrl(collectible.emoji, 64)
+        val embed = EmbedBuilder()
+            .setColor(0x202225)
+            .setTitle(collectible.displayName())
+            .setDescription(collectible.description)
+            .setThumbnail(image)
+            .build()
 
-        event.deferEdit().complete()
-        event.message.editMessage(" ").setActionRow(button).queue()
+        event.message.editMessage(" ")
+            .setEmbeds(embed)
+            .setActionRow(button)
+            .queue()
+    }
 
-        service.collectItem(id, user.idLong)
+    private fun emojiToImageUrl(emoji: String, size: Int = 256): String {
+        return emoji.codePoints()
+            .mapToObj { "https://emojiapi.dev/api/v1/${it.toString(16)}/${size}.png" }
+            .toList()
+            .first()
     }
 }

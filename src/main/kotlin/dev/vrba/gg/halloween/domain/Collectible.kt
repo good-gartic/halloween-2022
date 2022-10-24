@@ -1,6 +1,7 @@
 package dev.vrba.gg.halloween.domain
 
 import org.springframework.data.annotation.Id
+import org.springframework.data.annotation.Transient
 import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
 
@@ -24,4 +25,8 @@ data class Collectible(
 
     @Column("quantity")
     val quantity: Int,
-)
+) {
+    @Transient
+    fun displayName(): String = "$name ($value point${if (value > 1) "s" else ""})"
+
+}
