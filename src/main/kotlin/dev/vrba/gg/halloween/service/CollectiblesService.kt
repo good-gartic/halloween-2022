@@ -37,4 +37,8 @@ class CollectiblesService(
         return collectible
     }
 
+    fun getUserScore(user: Long): Score? {
+        return scoreRepository.findByUser(user)
+    }
+
 }

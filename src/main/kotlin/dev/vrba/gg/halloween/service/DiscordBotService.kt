@@ -21,8 +21,9 @@ import kotlin.random.nextInt
 @Service
 final class DiscordBotService(
     configuration: DiscordConfiguration,
+    commands: CommandService,
     private val service: CollectiblesService,
-    private val scheduler: TaskScheduler
+    private val scheduler: TaskScheduler,
 ) : ListenerAdapter() {
 
     private val jda: JDA = JDABuilder.createDefault(configuration.token)
@@ -35,6 +36,7 @@ final class DiscordBotService(
 
     init {
         jda.addEventListener(this)
+        commands.register(jda)
     }
 
     @Scheduled(initialDelay = 0, fixedRate = 30, timeUnit = TimeUnit.MINUTES)
