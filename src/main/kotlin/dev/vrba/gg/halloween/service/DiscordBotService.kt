@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.dv8tion.jda.api.interactions.components.buttons.Button
+import net.dv8tion.jda.api.requests.GatewayIntent
 import org.springframework.scheduling.TaskScheduler
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
@@ -30,6 +31,7 @@ final class DiscordBotService(
 
     private val jda: JDA = JDABuilder.createDefault(configuration.token)
         .setActivity(Activity.playing(("the Halloween game")))
+        .enableIntents(GatewayIntent.MESSAGE_CONTENT)
         .build()
         .awaitReady()
 
