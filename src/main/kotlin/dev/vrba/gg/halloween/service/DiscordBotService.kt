@@ -16,6 +16,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.Instant
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 import kotlin.random.nextInt
@@ -36,6 +37,8 @@ final class DiscordBotService(
         .awaitReady()
 
     private val log: TextChannel = jda.getTextChannelById(game.log) ?: throw IllegalStateException("Cannot find the configured log channel")
+
+    private val resolvedInteractions: MutableSet<Long> = HashSet()
 
     init {
         jda.addEventListener(this)
@@ -77,6 +80,14 @@ final class DiscordBotService(
 
         event.deferEdit().complete()
 
+        // Another user has already collected the collectible
+        if (resolvedInteractions.contains(event.message.idLong)) {
+            return
+        }
+
+        // Lock the collectible interaction
+        resolvedInteractions += event.message.idLong
+
         val id = event.componentId.removePrefix("collect:").toInt()
         val collectible = service.collectItem(id, event.user.idLong)
 
@@ -96,6 +107,9 @@ final class DiscordBotService(
             .queue()
 
         log.sendMessageEmbeds(base.addField("Collected in", "<#${event.channel.idLong}>", false).build()).queue()
+
+        // Release the collectible interaction, as it cannot be collected anymore
+        resolvedInteractions -= event.message.idLong
     }
 
     private fun emojiToImageUrl(emoji: String, size: Int = 256): String {

@@ -4,6 +4,8 @@ import dev.vrba.gg.halloween.domain.Collectible
 import dev.vrba.gg.halloween.domain.Score
 import dev.vrba.gg.halloween.repository.CollectibleRepository
 import dev.vrba.gg.halloween.repository.ScoreRepository
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
@@ -15,6 +17,9 @@ class CollectiblesService(
     private val collectibleRepository: CollectibleRepository,
     private val scoreRepository: ScoreRepository
 ) {
+
+    private val logger: Logger = LoggerFactory.getLogger(this::class.qualifiedName)
+
     fun getRandomCollectible(): Collectible {
         // Weighted random selection
         val collectible = collectibleRepository.findAllAvailableCollectibles()
@@ -35,6 +40,7 @@ class CollectiblesService(
         )
 
         scoreRepository.save(updated)
+        logger.info("The user [${user}] has collected the item [${collectible.emoji}]")
 
         return collectible
     }
