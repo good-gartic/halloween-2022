@@ -16,6 +16,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.Instant
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 import kotlin.random.nextInt
@@ -37,7 +38,7 @@ final class DiscordBotService(
 
     private val log: TextChannel = jda.getTextChannelById(game.log) ?: throw IllegalStateException("Cannot find the configured log channel")
 
-    private val resolvedInteractions: MutableSet<Long> = HashSet()
+    private val resolvedInteractions: MutableSet<Long> = ConcurrentHashMap.newKeySet()
 
     init {
         jda.addEventListener(this)
