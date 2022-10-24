@@ -40,7 +40,7 @@ final class DiscordBotService(
     @Scheduled(initialDelay = 0, fixedRate = 30, timeUnit = TimeUnit.MINUTES)
     fun scheduleRandomCollectible() {
         // Delay the post by 0-29 minutes
-        val delay = 0 // Random.nextInt(0..29)
+        val delay = Random.nextInt(0..29)
         val start = Instant.now() + Duration.ofMinutes(delay.toLong())
 
         scheduler.schedule(this::sendCollectible, start)
@@ -76,7 +76,7 @@ final class DiscordBotService(
         val collectible = service.collectItem(id, user.idLong)
 
         val button = Button.secondary("collect:-", "Collected by ${user.name}").withDisabled(true)
-        val image = emojiToImageUrl(collectible.emoji, 64)
+        val image = emojiToImageUrl(collectible.emoji, 48)
         val embed = EmbedBuilder()
             .setColor(0x202225)
             .setTitle(collectible.displayName())
