@@ -1,6 +1,7 @@
 package dev.vrba.gg.halloween.service
 
 import dev.vrba.gg.halloween.configuration.DiscordConfiguration
+import dev.vrba.gg.halloween.configuration.GameConfiguration
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDABuilder
@@ -24,6 +25,7 @@ final class DiscordBotService(
     commands: CommandService,
     private val service: CollectiblesService,
     private val scheduler: TaskScheduler,
+    private val game: GameConfiguration
 ) : ListenerAdapter() {
 
     private val jda: JDA = JDABuilder.createDefault(configuration.token)
@@ -31,18 +33,17 @@ final class DiscordBotService(
         .build()
         .awaitReady()
 
-    private val channel: TextChannel = jda.getTextChannelById(configuration.channel)
-        ?: throw IllegalStateException("Cannot find the configured Discord channel")
+    private val log: TextChannel = jda.getTextChannelById(game.log) ?: throw IllegalStateException("Cannot find the configured log channel")
 
     init {
         jda.addEventListener(this)
         commands.register(jda)
     }
 
-    @Scheduled(initialDelay = 0, fixedRate = 30, timeUnit = TimeUnit.MINUTES)
+    @Scheduled(initialDelay = 0, fixedRate = 10, timeUnit = TimeUnit.MINUTES)
     fun scheduleRandomCollectible() {
-        // Delay the post by 0-29 minutes
-        val delay = Random.nextInt(0..29)
+        // Delay the post by 0-9 minutes
+        val delay = Random.nextInt(0..9)
         val start = Instant.now() + Duration.ofMinutes(delay.toLong())
 
         scheduler.schedule(this::sendCollectible, start)
@@ -62,10 +63,11 @@ final class DiscordBotService(
             .build()
 
         val button = Button.secondary("collect:${collectible.id}", "Collect")
+        val channel = jda.getTextChannelById(game.channels.random()) ?: throw IllegalStateException("Cannot find the configured channel")
 
         channel.sendMessageEmbeds(embed)
             .setActionRow(button)
-            .queue()
+            .complete()
     }
 
     override fun onButtonInteraction(event: ButtonInteractionEvent) {
@@ -74,22 +76,21 @@ final class DiscordBotService(
         event.deferEdit().complete()
 
         val id = event.componentId.removePrefix("collect:").toInt()
-        val user = event.user
-        val collectible = service.collectItem(id, user.idLong)
+        val collectible = service.collectItem(id, event.user.idLong)
 
-        val button = Button.secondary("collect:-", "Collected by ${user.name}").withDisabled(true)
+        val username = event.member?.nickname ?: event.user.name
         val image = emojiToImageUrl(collectible.emoji, 48)
         val embed = EmbedBuilder()
             .setColor(0x202225)
             .setTitle(collectible.displayName())
             .setDescription(collectible.description)
+            .setAuthor(username, null, event.user.effectiveAvatarUrl)
             .setThumbnail(image)
             .build()
 
-        event.message.editMessage(" ")
-            .setEmbeds(embed)
-            .setActionRow(button)
-            .queue()
+        event.message.delete().queue()
+
+        log.sendMessageEmbeds(embed).queue()
     }
 
     private fun emojiToImageUrl(emoji: String, size: Int = 256): String {

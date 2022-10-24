@@ -7,6 +7,10 @@
     {
       "name": "spring.discord.channel",
       "type": "java.lang.Long"
+    },
+    {
+      "name": "spring.game.channels",
+      "type": "java.util.List"
     }
   ]
 }
