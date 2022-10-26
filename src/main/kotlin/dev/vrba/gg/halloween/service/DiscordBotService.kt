@@ -52,7 +52,7 @@ final class DiscordBotService(
     @Scheduled(initialDelay = 0, fixedRate = 5, timeUnit = TimeUnit.MINUTES)
     fun scheduleRandomCollectible() {
         // Delay the post by 0-9 minutes
-        val delay = 0 //Random.nextInt(0..9)
+        val delay = Random.nextInt(0..9)
         val start = Instant.now() + Duration.ofMinutes(delay.toLong())
 
         scheduler.schedule(this::sendCollectible, start)
