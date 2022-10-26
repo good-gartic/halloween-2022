@@ -95,7 +95,17 @@ final class DiscordBotService(
         lock.withLock {
             // Another user has already collected the collectible
             if (resolvedInteractions.contains(event.message.idLong)) {
-                return
+                val interaction = event.deferReply(true).complete()
+                val embed = EmbedBuilder()
+                    .setColor(0xED4245)
+                    .setTitle("Oh no! Somebody was faster")
+                    .setDescription("Better luck next time, cowboy")
+                    .setThumbnail("https://i.imgur.com/4cLpKnn.png")
+                    .build()
+
+                service.addMissedCollectible(event.user.idLong)
+
+                return interaction.editOriginalEmbeds(embed).queue()
             }
 
             // Lock the collectible interaction

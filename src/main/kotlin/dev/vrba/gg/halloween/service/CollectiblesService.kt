@@ -45,6 +45,15 @@ class CollectiblesService(
         return collectible
     }
 
+    fun addMissedCollectible(user: Long) {
+        val score = scoreRepository.findByUser(user) ?: scoreRepository.save(Score(user = user, collection = ""))
+        val updated = score.copy(
+            collection = score.collection + " \uD83E\uDD20"
+        )
+
+        scoreRepository.save(updated)
+    }
+
     fun getUserScore(user: Long): Score? {
         return scoreRepository.findByUser(user)
     }
