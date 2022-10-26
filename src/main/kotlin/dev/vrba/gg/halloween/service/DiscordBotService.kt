@@ -18,6 +18,8 @@ import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 import kotlin.random.Random
 import kotlin.random.nextInt
 
@@ -37,6 +39,8 @@ final class DiscordBotService(
         .awaitReady()
 
     private val log: TextChannel = jda.getTextChannelById(game.log) ?: throw IllegalStateException("Cannot find the configured log channel")
+
+    private val lock: ReentrantLock = ReentrantLock()
 
     private val resolvedInteractions: MutableSet<Long> = ConcurrentHashMap.newKeySet()
 
@@ -69,47 +73,56 @@ final class DiscordBotService(
 
         val button = Button.secondary("collect:${collectible.id}", "Collect")
         val channel = jda.getTextChannelById(game.channels.random()) ?: throw IllegalStateException("Cannot find the configured channel")
-
-        channel.sendMessageEmbeds(embed)
+        val message = channel.sendMessageEmbeds(embed)
             .setActionRow(button)
             .complete()
+
+        val expiration = Instant.now() + Duration.ofSeconds(30)
+
+        // Release the collectible interaction and delete the message
+        scheduler.schedule(
+            {
+                resolvedInteractions -= message.idLong
+                message.delete().queue()
+            },
+            expiration
+        )
     }
 
     override fun onButtonInteraction(event: ButtonInteractionEvent) {
         if (!event.componentId.startsWith("collect:")) return
 
-        // Another user has already collected the collectible
-        if (resolvedInteractions.contains(event.message.idLong)) {
-            return
+        lock.withLock {
+            // Another user has already collected the collectible
+            if (resolvedInteractions.contains(event.message.idLong)) {
+                return
+            }
+
+            // Lock the collectible interaction
+            resolvedInteractions += event.message.idLong
+
+            event.deferEdit().complete()
+
+            val id = event.componentId.removePrefix("collect:").toInt()
+            val collectible = service.collectItem(id, event.user.idLong)
+
+            val username = event.member?.nickname ?: event.user.name
+            val button = Button.secondary("disabled", "Collected by $username").withDisabled(true)
+            val image = emojiToImageUrl(collectible.emoji, 48)
+            val base = EmbedBuilder()
+                .setColor(0x202225)
+                .setTitle(collectible.displayName())
+                .setDescription(collectible.description)
+                .setAuthor(username, null, event.user.effectiveAvatarUrl)
+                .setThumbnail(image)
+
+            event.message
+                .editMessageEmbeds(base.build())
+                .setActionRow(button)
+                .queue()
+
+            log.sendMessageEmbeds(base.addField("Collected in", "<#${event.channel.idLong}>", false).build()).queue()
         }
-
-        // Lock the collectible interaction
-        resolvedInteractions += event.message.idLong
-
-        event.deferEdit().complete()
-
-        val id = event.componentId.removePrefix("collect:").toInt()
-        val collectible = service.collectItem(id, event.user.idLong)
-
-        val username = event.member?.nickname ?: event.user.name
-        val button = Button.secondary("disabled", "Collected by $username").withDisabled(true)
-        val image = emojiToImageUrl(collectible.emoji, 48)
-        val base = EmbedBuilder()
-            .setColor(0x202225)
-            .setTitle(collectible.displayName())
-            .setDescription(collectible.description)
-            .setAuthor(username, null, event.user.effectiveAvatarUrl)
-            .setThumbnail(image)
-
-        event.message
-            .editMessageEmbeds(base.build())
-            .setActionRow(button)
-            .queue()
-
-        log.sendMessageEmbeds(base.addField("Collected in", "<#${event.channel.idLong}>", false).build()).queue()
-
-        // Release the collectible interaction, as it cannot be collected anymore
-        resolvedInteractions -= event.message.idLong
     }
 
     private fun emojiToImageUrl(emoji: String, size: Int = 256): String {
