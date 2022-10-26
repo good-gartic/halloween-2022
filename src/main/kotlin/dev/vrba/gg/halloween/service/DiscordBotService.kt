@@ -52,7 +52,7 @@ final class DiscordBotService(
     @Scheduled(initialDelay = 0, fixedRate = 5, timeUnit = TimeUnit.MINUTES)
     fun scheduleRandomCollectible() {
         // Delay the post by 0-9 minutes
-        val delay = Random.nextInt(0..9)
+        val delay = 0 //Random.nextInt(0..9)
         val start = Instant.now() + Duration.ofMinutes(delay.toLong())
 
         scheduler.schedule(this::sendCollectible, start)
@@ -71,10 +71,14 @@ final class DiscordBotService(
             .setImage(image)
             .build()
 
-        val button = Button.secondary("collect:${collectible.id}", "Collect")
+        val buttons = listOf("collect:${collectible.id}", "fake:1", "fake:2")
+            .shuffled()
+            .zip(listOf("\uD83D\uDE48", "\uD83D\uDE4A", "\uD83D\uDE49"))
+            .map { (id, emoji) -> Button.secondary(id, emoji) }
+
         val channel = jda.getTextChannelById(game.channels.random()) ?: throw IllegalStateException("Cannot find the configured channel")
         val message = channel.sendMessageEmbeds(embed)
-            .setActionRow(button)
+            .setActionRow(buttons)
             .complete()
 
         val expiration = Instant.now() + Duration.ofSeconds(30)
@@ -90,6 +94,17 @@ final class DiscordBotService(
     }
 
     override fun onButtonInteraction(event: ButtonInteractionEvent) {
+        if (event.componentId.startsWith("fake")) {
+            val reply = event.deferReply(true).complete()
+            val embed = EmbedBuilder()
+                .setColor(0xED4245)
+                .setTitle("Oh no, wrong button!")
+                .setDescription("Better luck next time")
+                .build()
+
+            return reply.editOriginalEmbeds(embed).queue()
+        }
+
         if (!event.componentId.startsWith("collect:")) return
 
         lock.withLock {
