@@ -57,4 +57,8 @@ class CollectiblesService(
         return scoreRepository.findAll(pagination).toList()
     }
 
+    fun getRemainingCollectibles(): List<Collectible> {
+        return collectibleRepository.findAll().toList()
+    }
+
 }

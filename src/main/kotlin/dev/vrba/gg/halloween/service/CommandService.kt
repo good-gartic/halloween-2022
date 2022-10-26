@@ -31,6 +31,7 @@ class CommandService(private val service: CollectiblesService) : ListenerAdapter
         val embed = when (event.name) {
             "points" -> displayPoints(event.user)
             "leaderboard" -> displayLeaderboard()
+            "remaining" -> displayRemainingCollectibles()
 
             // Shouldn't happen. This is just to make the Kotlin compiler happy
             else -> throw IllegalStateException("Unknown command encountered")
@@ -42,13 +43,14 @@ class CommandService(private val service: CollectiblesService) : ListenerAdapter
     @Suppress("MoveVariableDeclarationIntoWhen")
     override fun onMessageReceived(event: MessageReceivedEvent) {
         val content = event.message.contentRaw
-        val pattern = "h\\.(points|leaderboard)".toRegex()
+        val pattern = "h\\.(points|leaderboard|remaining)".toRegex()
 
         if (content.matches(pattern)) {
             val command = content.removePrefix("h.").trim()
             val embed = when (command)  {
                 "points" -> displayPoints(event.message.author)
                 "leaderboard" -> displayLeaderboard()
+                "remaining" -> displayRemainingCollectibles()
 
                 // Shouldn't happen. This is again just to make the Kotlin compiler happy
                 else -> throw IllegalStateException("Unknown command encountered")
@@ -91,4 +93,19 @@ class CommandService(private val service: CollectiblesService) : ListenerAdapter
         }.build()
     }
 
+    private fun displayRemainingCollectibles(): MessageEmbed {
+        val remaining = service.getRemainingCollectibles()
+
+        val emojis = remaining
+            .flatMap { collectible -> List(collectible.quantity) { collectible.emoji } }
+            .shuffled()
+            .joinToString(" ")
+
+        return EmbedBuilder()
+            .setColor(0xf49200)
+            .setTitle("Remaining collectibles")
+            .setDescription(emojis)
+            .setTimestamp(Instant.now())
+            .build()
+    }
 }
