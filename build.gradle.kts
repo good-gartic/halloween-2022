@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "dev.vrba"
-version = "4.2"
+version = "4.3"
 java.sourceCompatibility = JavaVersion.VERSION_17
 
 configurations {
