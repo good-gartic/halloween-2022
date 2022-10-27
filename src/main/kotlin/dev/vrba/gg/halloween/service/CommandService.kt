@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
+import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import org.springframework.stereotype.Component
 import java.time.Instant
@@ -15,8 +16,9 @@ import java.time.Instant
 class CommandService(private val service: CollectiblesService) : ListenerAdapter() {
 
     private val commands = listOf(
-        Commands.slash("points", "View your points and collection of items"),
-        Commands.slash("leaderboard", "View the leaderboard")
+        Commands.slash("leaderboard", "View the leaderboard"),
+        Commands.slash("points", "View points and collection of an user")
+            .addOption(OptionType.USER, "user", "Defaults to you, if left out or blank", false)
     )
 
     fun register(client: JDA) {
@@ -29,7 +31,7 @@ class CommandService(private val service: CollectiblesService) : ListenerAdapter
     override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
         val reply = event.deferReply().complete()
         val embed = when (event.name) {
-            "points" -> displayPoints(event.user)
+            "points" -> displayPoints(event.getOption("user")?.asUser ?: event.user)
             "leaderboard" -> displayLeaderboard()
             "remaining" -> displayRemainingCollectibles()
 
@@ -43,12 +45,11 @@ class CommandService(private val service: CollectiblesService) : ListenerAdapter
     @Suppress("MoveVariableDeclarationIntoWhen")
     override fun onMessageReceived(event: MessageReceivedEvent) {
         val content = event.message.contentRaw
-        val pattern = "h\\.(points|leaderboard|remaining)".toRegex()
 
-        if (content.matches(pattern)) {
-            val command = content.removePrefix("h.").trim()
-            val embed = when (command)  {
-                "points" -> displayPoints(event.message.author)
+        if (content.startsWith("h.")) {
+            val command = content.removePrefix("h.").trim().split(" ").first()
+            val embed = when (command) {
+                "points" -> displayPoints(event.message.mentions.users.firstOrNull() ?: event.message.author)
                 "leaderboard" -> displayLeaderboard()
                 "remaining" -> displayRemainingCollectibles()
 
