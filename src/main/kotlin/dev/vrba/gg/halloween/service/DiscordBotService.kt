@@ -60,7 +60,7 @@ final class DiscordBotService(
         }
 
         // Delay the post by 0-9 minutes
-        val delay = Random.nextInt(0..1)//9 * 60)
+        val delay = Random.nextInt(0..9 * 60)
         val start = Instant.now() + Duration.ofSeconds(delay.toLong())
 
         scheduler.schedule(this::sendCollectible, start)
