@@ -16,6 +16,9 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.Instant
+import java.time.LocalDateTime
+import java.time.Month
+import java.time.ZoneOffset
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
@@ -51,8 +54,13 @@ final class DiscordBotService(
 
     @Scheduled(initialDelay = 0, fixedRate = 5, timeUnit = TimeUnit.MINUTES)
     fun scheduleRandomCollectible() {
+        // Stop this in november :)
+        if (LocalDateTime.now().month != Month.OCTOBER) {
+            return
+        }
+
         // Delay the post by 0-9 minutes
-        val delay = Random.nextInt(0..9 * 60)
+        val delay = Random.nextInt(0..1)//9 * 60)
         val start = Instant.now() + Duration.ofSeconds(delay.toLong())
 
         scheduler.schedule(this::sendCollectible, start)
@@ -60,6 +68,9 @@ final class DiscordBotService(
 
     private fun sendCollectible() {
         val collectible = service.getRandomCollectible()
+
+        val end = LocalDateTime.of(2022, Month.NOVEMBER, 1, 0, 0, 0)
+        val offset = ZoneOffset.ofHours(1)
 
         val user = jda.selfUser
         val image = emojiToImageUrl(collectible.emoji)
@@ -69,6 +80,7 @@ final class DiscordBotService(
             .setDescription(collectible.description)
             .setFooter(user.name, user.effectiveAvatarUrl)
             .setImage(image)
+            .addField("The mini game is ending", "<t:${end.toEpochSecond(offset)}:R>", false)
             .build()
 
         val button = Button.secondary("collect:${collectible.id}", "Collect")
@@ -77,7 +89,7 @@ final class DiscordBotService(
             .setActionRow(button)
             .complete()
 
-        val expiration = Instant.now() + Duration.ofSeconds(30)
+        val expiration = Instant.now() + Duration.ofSeconds(60)
 
         // Release the collectible interaction and delete the message
         scheduler.schedule(
