@@ -56,15 +56,14 @@ final class DiscordBotService(
         commands.register(jda)
     }
 
-    @Scheduled(initialDelay = 0, fixedRate = 5, timeUnit = TimeUnit.MINUTES)
+    @Scheduled(initialDelay = 0, fixedRate = 90, timeUnit = TimeUnit.SECONDS)
     fun scheduleRandomCollectible() {
         // Stop this in november :)
         if (LocalDateTime.now().month != Month.OCTOBER) {
             return
         }
 
-        // Delay the post by 0-9 minutes
-        val delay = Random.nextInt(0..9 * 60)
+        val delay = Random.nextInt(0..180)
         val start = Instant.now() + Duration.ofSeconds(delay.toLong())
 
         scheduler.schedule(this::sendCollectible, start)
