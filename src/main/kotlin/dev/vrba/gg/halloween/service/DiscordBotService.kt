@@ -47,6 +47,10 @@ final class DiscordBotService(
 
     private val resolvedInteractions: MutableSet<Long> = ConcurrentHashMap.newKeySet()
 
+    private val end = LocalDateTime.of(2022, Month.NOVEMBER, 1, 0, 0, 0)
+    
+    private val offset = ZoneOffset.ofHours(1)
+    
     init {
         jda.addEventListener(this)
         commands.register(jda)
@@ -68,9 +72,6 @@ final class DiscordBotService(
 
     private fun sendCollectible() {
         val collectible = service.getRandomCollectible()
-
-        val end = LocalDateTime.of(2022, Month.NOVEMBER, 1, 0, 0, 0)
-        val offset = ZoneOffset.ofHours(1)
 
         val user = jda.selfUser
         val image = emojiToImageUrl(collectible.emoji)
@@ -124,6 +125,7 @@ final class DiscordBotService(
                     .setTitle("Oh no! Somebody was faster")
                     .setDescription("Better luck next time, cowboy")
                     .setThumbnail("https://i.imgur.com/4cLpKnn.png")
+                    .addField("The mini game is ending", "<t:${end.toEpochSecond(offset)}:R>", false)
                     .build()
 
                 service.addMissedCollectible(event.user.idLong)
@@ -147,6 +149,7 @@ final class DiscordBotService(
                 .setTitle(collectible.displayName())
                 .setDescription(collectible.description)
                 .setAuthor(username, null, event.user.effectiveAvatarUrl)
+                .addField("The mini game is ending", "<t:${end.toEpochSecond(offset)}:R>", false)
                 .setThumbnail(image)
 
             event.message
