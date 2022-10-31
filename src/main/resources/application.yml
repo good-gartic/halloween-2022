@@ -5,7 +5,7 @@ spring:
     password: ${DATABASE_PASSWORD:halloween}
 
   liquibase:
-    enabled: true
+    enabled: false
     change-log: classpath*:/changelog.sql
     database-change-log-table: liquibase_change_log
     database-change-log-lock-table: liquibase_change_log_lock
@@ -17,6 +17,11 @@ spring:
     log: 1034036007294734336
     channels:
       - 683633975842963456
+      - 693583545356124200
+      - 782573228303581184
+      - 709533256487272568
+      - 694933305954402364
+      - 1034036007294734336
 
 ---
 
